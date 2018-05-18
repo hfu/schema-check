@@ -6,13 +6,13 @@ let pools = {}
 for (const database of config.get('databases')) {
   pools[database] = new Pool({
     host: config.get('host'), user: config.get('user'),
-    password: config.get('password'), database: database
+    password: config.get('password'), database: database, max: 1000
   })
 }
 
 const dump = (value, type) => {
   if (type === 'USER-DEFINED') {
-    return wkx.Geometry.parse(new Buffer(value), 'hex').toGeoJSON().type
+    return wkx.Geometry.parse(Buffer.from(value), 'hex').toGeoJSON().type
   } else {
     return value
   }
@@ -26,7 +26,12 @@ const inspect = async (database) => {
   )
   for (let table of tables.rows) {
     if (table.table_name === 'spatial_ref_sys') continue
-    console.log(`${table.table_catalog}::${table.table_name}`)
+    const counts = await client.query(
+      `SELECT count(*) FROM ${table.table_name}`
+    )
+    const count = counts.rows[0].count
+    console.log(`${table.table_catalog}::${table.table_name}(${count})`)
+    if (count === '0') continue
     const columns = await client.query(
       `SELECT * FROM information_schema.columns WHERE ` +
       `table_name='${table.table_name}' ` +
