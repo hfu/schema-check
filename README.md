@@ -9,5 +9,13 @@ $ node schema-check.js
 
 # config/default.hjson
 ```
-DATABASES = [database1, database2]
+{
+  host: example.com
+  user: user
+  password: secretpassword
+  databases: [
+    database1
+    database2
+  ]
+}
 ```
